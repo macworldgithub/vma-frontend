@@ -1,16 +1,16 @@
-import type { User, Meeting, AuditLog } from '../types';
+import type { User, Meeting, AuditLog, PlatformStatus } from '../types';
 
 export const mockUsers: User[] = [
-  { id: 'u1', name: 'Sarah Mitchell', email: 'sarah.mitchell@pattersoncheyney.com.au', role: 'super_admin', status: 'active', department: 'Executive', lastActive: '2026-05-05T08:30:00', meetingsJoined: 142, avatarUrl: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?w=80&h=80&fit=crop' },
-  { id: 'u2', name: 'James Thornton', email: 'james.thornton@pattersoncheyney.com.au', role: 'admin', status: 'active', department: 'Sales', lastActive: '2026-05-05T07:45:00', meetingsJoined: 98, avatarUrl: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?w=80&h=80&fit=crop' },
-  { id: 'u3', name: 'Emily Chen', email: 'emily.chen@pattersoncheyney.com.au', role: 'admin', status: 'active', department: 'Finance', lastActive: '2026-05-04T16:20:00', meetingsJoined: 76, avatarUrl: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?w=80&h=80&fit=crop' },
-  { id: 'u4', name: 'Marcus Webb', email: 'marcus.webb@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Service', lastActive: '2026-05-05T09:10:00', meetingsJoined: 34, avatarUrl: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=80&h=80&fit=crop' },
-  { id: 'u5', name: 'Olivia Park', email: 'olivia.park@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Marketing', lastActive: '2026-05-03T14:00:00', meetingsJoined: 21 },
-  { id: 'u6', name: 'Daniel Hughes', email: 'daniel.hughes@pattersoncheyney.com.au', role: 'admin', status: 'suspended', department: 'Compliance', lastActive: '2026-04-28T11:30:00', meetingsJoined: 55 },
-  { id: 'u7', name: 'Priya Sharma', email: 'priya.sharma@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'HR', lastActive: '2026-05-05T08:00:00', meetingsJoined: 18, avatarUrl: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?w=80&h=80&fit=crop' },
-  { id: 'u8', name: 'Tom Bradley', email: 'tom.bradley@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Sales', lastActive: '2026-05-04T17:45:00', meetingsJoined: 44 },
-  { id: 'u9', name: 'Natalie Ross', email: 'natalie.ross@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Finance', lastActive: '2026-05-02T09:30:00', meetingsJoined: 29 },
-  { id: 'u10', name: 'Chris Lawson', email: 'chris.lawson@pattersoncheyney.com.au', role: 'admin', status: 'active', department: 'IT', lastActive: '2026-05-05T07:00:00', meetingsJoined: 87 },
+  { id: 'u1', name: 'Sarah Mitchell', email: 'sarah.mitchell@pattersoncheyney.com.au', role: 'super_admin', status: 'active', department: 'Executive', lastActive: '2026-05-05T08:30:00', meetingsJoined: 142, avatarUrl: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?w=80&h=80&fit=crop', botEnabled: true, platforms: ['teams', 'zoom', 'google_meet'], group: 'Executive Team' },
+  { id: 'u2', name: 'James Thornton', email: 'james.thornton@pattersoncheyney.com.au', role: 'dept_admin', status: 'active', department: 'Sales', lastActive: '2026-05-05T07:45:00', meetingsJoined: 98, avatarUrl: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?w=80&h=80&fit=crop', botEnabled: true, platforms: ['teams', 'zoom'], group: 'Sales Division' },
+  { id: 'u3', name: 'Emily Chen', email: 'emily.chen@pattersoncheyney.com.au', role: 'dept_admin', status: 'active', department: 'Finance', lastActive: '2026-05-04T16:20:00', meetingsJoined: 76, avatarUrl: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?w=80&h=80&fit=crop', botEnabled: true, platforms: ['zoom', 'google_meet'], group: 'Finance & Compliance' },
+  { id: 'u4', name: 'Marcus Webb', email: 'marcus.webb@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Service', lastActive: '2026-05-05T09:10:00', meetingsJoined: 34, avatarUrl: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=80&h=80&fit=crop', botEnabled: true, platforms: ['google_meet'], group: 'Service Ops' },
+  { id: 'u5', name: 'Olivia Park', email: 'olivia.park@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Marketing', lastActive: '2026-05-03T14:00:00', meetingsJoined: 21, botEnabled: true, platforms: ['teams'], group: 'Marketing' },
+  { id: 'u6', name: 'Daniel Hughes', email: 'daniel.hughes@pattersoncheyney.com.au', role: 'dept_admin', status: 'suspended', department: 'Compliance', lastActive: '2026-04-28T11:30:00', meetingsJoined: 55, botEnabled: false, platforms: ['teams', 'zoom'], group: 'Finance & Compliance' },
+  { id: 'u7', name: 'Priya Sharma', email: 'priya.sharma@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'HR', lastActive: '2026-05-05T08:00:00', meetingsJoined: 18, avatarUrl: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?w=80&h=80&fit=crop', botEnabled: true, platforms: ['teams', 'google_meet'], group: 'People & Culture' },
+  { id: 'u8', name: 'Tom Bradley', email: 'tom.bradley@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Sales', lastActive: '2026-05-04T17:45:00', meetingsJoined: 44, botEnabled: true, platforms: ['teams', 'zoom'], group: 'Sales Division' },
+  { id: 'u9', name: 'Natalie Ross', email: 'natalie.ross@pattersoncheyney.com.au', role: 'read_only', status: 'active', department: 'Finance', lastActive: '2026-05-02T09:30:00', meetingsJoined: 29, botEnabled: false, platforms: ['zoom'], group: 'Finance & Compliance' },
+  { id: 'u10', name: 'Chris Lawson', email: 'chris.lawson@pattersoncheyney.com.au', role: 'dept_admin', status: 'active', department: 'IT', lastActive: '2026-05-05T07:00:00', meetingsJoined: 87, botEnabled: true, platforms: ['teams', 'zoom', 'google_meet'], group: 'IT & Infrastructure' },
 ];
 
 export const mockMeetings: Meeting[] = [
@@ -130,7 +130,7 @@ export const mockAuditLogs: AuditLog[] = [
   { id: 'al5', userId: 'system', userName: 'System', action: 'Bot joined meeting', eventType: 'system', timestamp: '2026-05-04T14:00:01', details: 'VMA bot joined: Service Department Ops Review (Google Meet)', ipAddress: '10.0.0.1' },
   { id: 'al6', userId: 'system', userName: 'System', action: 'Post-meeting summary generated', eventType: 'system', timestamp: '2026-05-04T15:14:22', details: 'Summary and action items delivered for meeting m3', ipAddress: '10.0.0.1' },
   { id: 'al7', userId: 'u2', userName: 'James Thornton', action: 'SSO login', eventType: 'security', timestamp: '2026-05-05T07:44:52', details: 'Successful login via Microsoft Entra ID', ipAddress: '203.12.45.87' },
-  { id: 'al8', userId: 'u10', userName: 'Chris Lawson', action: 'Role updated', eventType: 'user_action', timestamp: '2026-05-03T11:05:17', details: 'Changed role for priya.sharma from admin to read_only', ipAddress: '10.0.1.18' },
+  { id: 'al8', userId: 'u10', userName: 'Chris Lawson', action: 'Role updated', eventType: 'user_action', timestamp: '2026-05-03T11:05:17', details: 'Changed role for priya.sharma from dept_admin to read_only', ipAddress: '10.0.1.18' },
   { id: 'al9', userId: 'system', userName: 'System', action: 'Failed login attempt', eventType: 'security', timestamp: '2026-05-03T09:17:44', details: 'Failed SSO authentication for unknown@external.com (3 attempts)', ipAddress: '185.23.44.12' },
   { id: 'al10', userId: 'u1', userName: 'Sarah Mitchell', action: 'Emergency stop triggered', eventType: 'system', timestamp: '2026-05-02T14:30:00', details: 'Global bot service paused by Super Admin', ipAddress: '10.0.1.42' },
   { id: 'al11', userId: 'u3', userName: 'Emily Chen', action: 'Export report downloaded', eventType: 'user_action', timestamp: '2026-05-02T10:22:11', details: 'Downloaded April usage report (PDF)', ipAddress: '10.0.1.55' },
@@ -153,4 +153,31 @@ export const weeklyTrendData = [
   { week: 'W3', seats: 68 },
   { week: 'W4', seats: 79 },
   { week: 'W5', seats: 83 },
+];
+
+export const mockPlatformStatus: PlatformStatus[] = [
+  {
+    platform: 'teams',
+    status: 'connected',
+    activeMeetings: 1,
+    latency: '42ms',
+    lastSync: '2026-05-05T09:00:00',
+    version: 'Bot Framework v4.21',
+  },
+  {
+    platform: 'zoom',
+    status: 'connected',
+    activeMeetings: 1,
+    latency: '68ms',
+    lastSync: '2026-05-05T09:01:00',
+    version: 'Meeting SDK v5.17',
+  },
+  {
+    platform: 'google_meet',
+    status: 'connected',
+    activeMeetings: 0,
+    latency: '55ms',
+    lastSync: '2026-05-05T08:58:00',
+    version: 'Calendar API v3 + Meet',
+  },
 ];

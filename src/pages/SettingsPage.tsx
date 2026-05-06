@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, Database, Bell, AlertTriangle, Check, Lock, Globe, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, Database, Bell, AlertTriangle, Check, Globe, Server, Fingerprint, Key, HardDrive, Share2 } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 
 type Tab = 'security' | 'data' | 'notifications' | 'service';
@@ -14,25 +14,25 @@ interface ToggleProps {
 
 function Toggle({ checked, onChange, label, desc, danger }: ToggleProps) {
   return (
-    <div className="flex items-start justify-between gap-4 py-4">
+    <div className="flex items-start justify-between gap-4 py-5">
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium ${danger ? 'text-error-400' : 'text-neutral-200'}`}>{label}</p>
-        {desc && <p className="text-xs text-neutral-500 mt-0.5">{desc}</p>}
+        <p className={`text-sm font-bold ${danger ? 'text-rose-400' : 'text-neutral-200'}`}>{label}</p>
+        {desc && <p className="text-xs text-neutral-500 mt-1 leading-relaxed">{desc}</p>}
       </div>
       <button
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex w-10 h-6 flex-shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${
-          checked ? (danger ? 'bg-error-600' : 'bg-brand-600') : 'bg-neutral-700'
-        }`}
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? (danger ? 'bg-rose-600' : 'bg-blue-600 shadow-[0_0_12px_rgba(59,130,246,0.4)]') : 'bg-neutral-800'
+          }`}
       >
-        <span className={`inline-block w-4 h-4 mt-1 rounded-full bg-white shadow transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-1'}`} />
+        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
       </button>
     </div>
   );
 }
 
 export function SettingsPage() {
-  const [tab, setTab] = useState<Tab>('security');
+  const [activeTab, setActiveTab] = useState<Tab>('security');
+  const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // Security
@@ -45,250 +45,265 @@ export function SettingsPage() {
   const [transcriptRetention, setTranscriptRetention] = useState('60');
   const [audioAutoDelete, setAudioAutoDelete] = useState(true);
   const [encryptionAtRest, setEncryptionAtRest] = useState(true);
-  const [dataResidency] = useState('AU (ap-southeast-2)');
 
   // Notifications
   const [emailOnComplete, setEmailOnComplete] = useState(true);
   const [emailOnError, setEmailOnError] = useState(true);
-  const [slackNotifs, setSlackNotifs] = useState(false);
   const [weeklyReport, setWeeklyReport] = useState(true);
 
   // Service
-  const [botEnabled, setBotEnabled] = useState(true);
   const [autoJoin, setAutoJoin] = useState(true);
   const [consentPrompt, setConsentPrompt] = useState(true);
 
-  function save() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  function handleSave() {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }, 1000);
   }
 
   return (
-    <div className="p-6 space-y-5 animate-fade-in max-w-4xl">
-      {/* Tabs */}
-      <div className="flex gap-1 bg-neutral-900 border border-neutral-800 rounded-xl p-1 flex-wrap w-fit">
-        {([
-          { key: 'security',      label: 'Security',       icon: Shield },
-          { key: 'data',          label: 'Data & Privacy', icon: Database },
-          { key: 'notifications', label: 'Notifications',  icon: Bell },
-          { key: 'service',       label: 'Service Control',icon: Globe },
-        ] as { key: Tab; label: string; icon: React.ElementType }[]).map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === key ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
-            }`}
-          >
-            <Icon size={15} /> {label}
-          </button>
-        ))}
+    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-100">System Settings</h1>
+          <p className="text-sm text-neutral-500 mt-1">Global configuration for Patterson Cheney Enterprise instance.</p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className={`min-w-[160px] ${saved ? 'btn-secondary border-emerald-500/50 text-emerald-400' : 'btn-primary'}`}
+        >
+          {isSaving ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Applying...
+            </span>
+          ) : saved ? (
+            <span className="flex items-center gap-2">
+              <Check size={16} /> Changes Saved
+            </span>
+          ) : (
+            'Save All Settings'
+          )}
+        </button>
       </div>
 
-      {tab === 'security' && (
-        <div className="animate-fade-in space-y-4">
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Lock size={16} className="text-brand-400" />
-              <h3 className="text-sm font-semibold text-neutral-100">Authentication & Access</h3>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">Configure how users authenticate and access the admin console.</p>
-            <div className="divide-y divide-neutral-800/50">
-              <Toggle checked={mfaRequired} onChange={setMfaRequired} label="Require Multi-Factor Authentication" desc="All users must complete MFA before accessing the admin console. Strongly recommended." />
-              <Toggle checked={ssoOnly} onChange={setSsoOnly} label="Microsoft Entra ID SSO Only" desc="Disable password login — only allow authentication via Microsoft SSO." />
-              <Toggle checked={ipWhitelist} onChange={setIpWhitelist} label="IP Allowlist" desc="Restrict admin console access to approved IP address ranges." />
-            </div>
-            <div className="pt-4 border-t border-neutral-800">
-              <label className="label">Session timeout (hours)</label>
-              <div className="flex items-center gap-3">
-                <select className="input w-32" value={sessionTimeout} onChange={e => setSessionTimeout(e.target.value)}>
-                  <option value="1">1 hour</option>
-                  <option value="4">4 hours</option>
-                  <option value="8">8 hours</option>
-                  <option value="24">24 hours</option>
-                </select>
-                <p className="text-xs text-neutral-500">Users will be signed out after this period of inactivity.</p>
-              </div>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Navigation */}
+        <div className="lg:col-span-3 flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
+          {[
+            { id: 'security', label: 'Security & Access', icon: Shield },
+            { id: 'data', label: 'Data & Privacy', icon: Database },
+            { id: 'notifications', label: 'Notifications', icon: Bell },
+            { id: 'service', label: 'Service Policy', icon: Globe },
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as Tab)}
+              className={`flex-shrink-0 lg:w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === t.id
+                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.05)]'
+                  : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40'
+                }`}
+            >
+              <t.icon size={18} />
+              <span className="whitespace-nowrap">{t.label}</span>
+            </button>
+          ))}
+        </div>
 
-          <div className="card p-5">
-            <h3 className="text-sm font-semibold text-neutral-100 mb-3 flex items-center gap-2">
-              <Shield size={15} className="text-success-400" /> Compliance Status
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { label: 'Privacy Act 1988',       status: 'Compliant',    variant: 'success' as const },
-                { label: 'ISO 27001 Alignment',    status: 'In Progress',  variant: 'warning' as const },
-                { label: 'SOC 2 Type II',          status: 'In Progress',  variant: 'warning' as const },
-                { label: 'AU Data Residency',      status: 'Enforced',     variant: 'success' as const },
-                { label: 'TLS 1.3 Encryption',    status: 'Active',       variant: 'success' as const },
-                { label: 'Pen Testing (last)',     status: 'Apr 2026',     variant: 'info' as const },
-              ].map(({ label, status, variant }) => (
-                <div key={label} className="flex items-center justify-between p-3 rounded-lg bg-neutral-800/40">
-                  <span className="text-xs text-neutral-400">{label}</span>
-                  <Badge variant={variant}>{status}</Badge>
+        {/* Content */}
+        <div className="lg:col-span-9 space-y-6">
+          {activeTab === 'security' && (
+            <div className="space-y-6 animate-slide-up">
+              <div className="card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                    <Fingerprint size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-widest">Authentication</h3>
+                    <p className="text-xs text-neutral-500">Configure zero-trust access policies</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="flex justify-end">
-            <button onClick={save} className={saved ? 'btn-secondary' : 'btn-primary'}>
-              {saved ? <><Check size={15} /> Saved</> : 'Save Security Settings'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'data' && (
-        <div className="animate-fade-in space-y-4">
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Database size={16} className="text-brand-400" />
-              <h3 className="text-sm font-semibold text-neutral-100">Data Retention & Storage</h3>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">Control how long data is retained and where it is stored.</p>
-
-            <div className="mb-4">
-              <label className="label">Transcript retention period</label>
-              <div className="flex items-center gap-3">
-                <select className="input w-40" value={transcriptRetention} onChange={e => setTranscriptRetention(e.target.value)}>
-                  <option value="30">30 days</option>
-                  <option value="60">60 days</option>
-                  <option value="90">90 days</option>
-                  <option value="180">180 days</option>
-                  <option value="365">1 year</option>
-                </select>
-                <p className="text-xs text-neutral-500">Transcripts are automatically deleted after this period.</p>
-              </div>
-            </div>
-
-            <div className="divide-y divide-neutral-800/50">
-              <Toggle checked={audioAutoDelete} onChange={setAudioAutoDelete} label="Auto-delete audio recordings after processing" desc="Raw audio is deleted immediately after transcript generation. Recommended for privacy compliance." />
-              <Toggle checked={encryptionAtRest} onChange={setEncryptionAtRest} label="Encryption at rest" desc="All stored data is encrypted using AES-256. This cannot be disabled." />
-            </div>
-
-            <div className="mt-4 p-3 rounded-lg bg-neutral-800/40 flex items-center gap-3">
-              <Globe size={14} className="text-success-400 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-medium text-neutral-300">Data Residency</p>
-                <p className="text-2xs text-neutral-500" style={{ fontSize: '10px' }}>All data is processed and stored exclusively in: <span className="text-success-400 font-medium">{dataResidency}</span>. This cannot be changed.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card p-5 border-error-500/20 bg-error-500/5">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle size={16} className="text-error-400" />
-              <h3 className="text-sm font-semibold text-error-400">Danger Zone</h3>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">Irreversible actions that permanently delete data.</p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg border border-error-500/20">
-                <div>
-                  <p className="text-sm font-medium text-neutral-200">Delete all transcripts</p>
-                  <p className="text-xs text-neutral-500">Permanently remove all stored transcripts. Cannot be undone.</p>
+                <div className="divide-y divide-neutral-800/50">
+                  <Toggle checked={mfaRequired} onChange={setMfaRequired} label="Require Multi-Factor Authentication" desc="All users must complete MFA before accessing the admin console. Strongly recommended." />
+                  <Toggle checked={ssoOnly} onChange={setSsoOnly} label="Microsoft Entra ID SSO Only" desc="Disable password login — only allow authentication via Microsoft SSO." />
+                  <Toggle checked={ipWhitelist} onChange={setIpWhitelist} label="IP Allowlist" desc="Restrict admin console access to approved corporate IP address ranges." />
                 </div>
-                <button className="btn-danger text-xs">Delete All</button>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg border border-error-500/20">
-                <div>
-                  <p className="text-sm font-medium text-neutral-200">Export & delete account data</p>
-                  <p className="text-xs text-neutral-500">Export all data then remove from our systems. GDPR/APPs compliant.</p>
+
+                <div className="mt-4 pt-6 border-t border-neutral-800">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex-1">
+                      <label className="label">Session Duration (Auto-Signout)</label>
+                      <p className="text-[11px] text-neutral-600">Users will be signed out after this period of inactivity.</p>
+                    </div>
+                    <select className="input w-full md:w-48 h-11" value={sessionTimeout} onChange={e => setSessionTimeout(e.target.value)}>
+                      <option value="1">1 hour</option>
+                      <option value="4">4 hours</option>
+                      <option value="8">8 hours</option>
+                      <option value="24">24 hours</option>
+                    </select>
+                  </div>
                 </div>
-                <button className="btn-danger text-xs">Export & Delete</button>
+              </div>
+
+              <div className="card p-6">
+                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <Shield size={14} className="text-emerald-400" /> Compliance Hardening
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { label: 'Privacy Act 1988', status: 'Compliant', variant: 'success' as const },
+                    { label: 'SOC 2 Type II', status: 'In Progress', variant: 'warning' as const },
+                    { label: 'AU Data Residency', status: 'Enforced', variant: 'success' as const },
+                    { label: 'TLS 1.3 Encryption', status: 'Active', variant: 'success' as const },
+                  ].map(({ label, status, variant }) => (
+                    <div key={label} className="flex items-center justify-between p-4 rounded-xl bg-neutral-900 border border-neutral-800/50">
+                      <span className="text-xs font-medium text-neutral-400">{label}</span>
+                      <Badge variant={variant}>{status}</Badge>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="flex justify-end">
-            <button onClick={save} className={saved ? 'btn-secondary' : 'btn-primary'}>
-              {saved ? <><Check size={15} /> Saved</> : 'Save Data Settings'}
-            </button>
-          </div>
+          {activeTab === 'data' && (
+            <div className="space-y-6 animate-slide-up">
+              <div className="card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                    <HardDrive size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-widest">Retention Policy</h3>
+                    <p className="text-xs text-neutral-500">Manage data lifecycle and storage limits</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex-1">
+                      <label className="label">Meeting Intelligence Retention</label>
+                      <p className="text-[11px] text-neutral-600">Transcripts and summaries are automatically purged after this period.</p>
+                    </div>
+                    <select className="input w-full md:w-48 h-11" value={transcriptRetention} onChange={e => setTranscriptRetention(e.target.value)}>
+                      <option value="30">30 days</option>
+                      <option value="60">60 days</option>
+                      <option value="90">90 days</option>
+                      <option value="365">1 year</option>
+                    </select>
+                  </div>
+
+                  <div className="divide-y divide-neutral-800/50">
+                    <Toggle checked={audioAutoDelete} onChange={setAudioAutoDelete} label="Auto-delete raw audio files" desc="Raw media is deleted immediately after AI processing. Recommended for privacy." />
+                    <Toggle checked={encryptionAtRest} onChange={setEncryptionAtRest} label="Hardware-level AES-256 GCM" desc="Immutable encryption for all stored data. This is an enterprise-wide requirement." />
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center gap-4">
+                  <Globe size={18} className="text-emerald-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-neutral-200">Regional Residency: AU East (Sydney)</p>
+                    <p className="text-[10px] text-neutral-500 mt-0.5">Instance strictly bound to Australian jurisdiction. No data leaves the territory.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card p-6 border-rose-500/10 bg-rose-500/5">
+                <div className="flex items-center gap-2 mb-4 text-rose-400">
+                  <AlertTriangle size={16} />
+                  <h3 className="text-xs font-bold uppercase tracking-widest">Danger Zone</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-rose-500/20 bg-neutral-950/50">
+                    <div>
+                      <p className="text-sm font-bold text-neutral-200">Purge Instance Data</p>
+                      <p className="text-xs text-neutral-500 mt-1">Irreversibly delete all historical meeting data across the organization.</p>
+                    </div>
+                    <button className="btn-danger text-xs px-6 py-2">Purge All</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <div className="space-y-6 animate-slide-up">
+              <div className="card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                    <Bell size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-widest">System Alerts</h3>
+                    <p className="text-xs text-neutral-500">Configure administrative notification channels</p>
+                  </div>
+                </div>
+
+                <div className="divide-y divide-neutral-800/50">
+                  <Toggle checked={emailOnComplete} onChange={setEmailOnComplete} label="Meeting Processing Complete" desc="Receive an email when AI has finished generating meeting intelligence." />
+                  <Toggle checked={emailOnError} onChange={setEmailOnError} label="Bot Join Exceptions" desc="Immediate alert if a bot is blocked or fails to connect to a session." />
+                  <Toggle checked={weeklyReport} onChange={setWeeklyReport} label="Weekly Executive Digest" desc="High-level usage and compliance report delivered every Monday." />
+                </div>
+              </div>
+
+              <div className="card p-6">
+                <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <Share2 size={14} /> External Integration
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="label">Slack / Teams Webhook URL</label>
+                    <input className="input h-11" placeholder="https://hooks.slack.com/..." />
+                    <p className="text-[10px] text-neutral-600 mt-2 italic">Format: JSON payload over HTTPS POST</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'service' && (
+            <div className="space-y-6 animate-slide-up">
+              <div className="card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                    <Server size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-widest">Service Behavior</h3>
+                    <p className="text-xs text-neutral-500">Global bot interaction settings</p>
+                  </div>
+                </div>
+
+                <div className="divide-y divide-neutral-800/50">
+                  <Toggle checked={autoJoin} onChange={setAutoJoin} label="Auto-join calendar invitations" desc="VMA will automatically process invitations sent to the bot service account." />
+                  <Toggle checked={consentPrompt} onChange={setConsentPrompt} label="Recording Consent Announcement" desc="Bots will verbally announce that the session is being transcribed upon joining." />
+                </div>
+              </div>
+
+              <div className="card p-6 border-blue-500/10 bg-blue-500/5">
+                <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Key size={14} /> Platform Credentials
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {['Teams', 'Zoom', 'Meet'].map(p => (
+                    <div key={p} className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex flex-col items-center text-center">
+                      <p className="text-xs font-bold text-neutral-200 mb-2">{p}</p>
+                      <Badge variant="success">Active</Badge>
+                      <button className="text-[10px] text-neutral-600 mt-4 hover:text-blue-400 transition-colors uppercase font-bold">Rotate API Key</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {tab === 'notifications' && (
-        <div className="animate-fade-in space-y-4">
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Bell size={16} className="text-brand-400" />
-              <h3 className="text-sm font-semibold text-neutral-100">Email Notifications</h3>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">Configure which events trigger email notifications to admins.</p>
-            <div className="divide-y divide-neutral-800/50">
-              <Toggle checked={emailOnComplete} onChange={setEmailOnComplete} label="Meeting summary delivered" desc="Notify admin when a post-meeting summary is successfully delivered." />
-              <Toggle checked={emailOnError} onChange={setEmailOnError} label="Bot join failure" desc="Alert when VMA bot fails to join a scheduled meeting." />
-              <Toggle checked={weeklyReport} onChange={setWeeklyReport} label="Weekly usage digest" desc="Receive a weekly summary of meetings processed, seat utilisation, and system health." />
-              <Toggle checked={slackNotifs} onChange={setSlackNotifs} label="Slack integration" desc="Post notifications to a configured Slack channel (webhook URL required)." />
-            </div>
-          </div>
-
-          <div className="card p-5">
-            <h3 className="text-sm font-semibold text-neutral-100 mb-4 flex items-center gap-2">
-              <Clock size={15} className="text-brand-400" /> Notification Recipients
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="label">Admin notification email</label>
-                <input className="input" type="email" defaultValue="admin@pattersoncheyney.com.au" />
-              </div>
-              <div>
-                <label className="label">Slack webhook URL (optional)</label>
-                <input className="input" type="url" placeholder="https://hooks.slack.com/services/..." />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button onClick={save} className={saved ? 'btn-secondary' : 'btn-primary'}>
-              {saved ? <><Check size={15} /> Saved</> : 'Save Notification Settings'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'service' && (
-        <div className="animate-fade-in space-y-4">
-          <div className="card p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Globe size={16} className="text-brand-400" />
-              <h3 className="text-sm font-semibold text-neutral-100">VMA Bot Service Control</h3>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">Control the global meeting bot behaviour and platform integrations.</p>
-            <div className="divide-y divide-neutral-800/50">
-              <Toggle checked={botEnabled} onChange={setBotEnabled} label="VMA Bot Service" desc="Master switch. Disabling this prevents the bot from joining any meetings globally." />
-              <Toggle checked={autoJoin} onChange={setAutoJoin} label="Auto-join scheduled meetings" desc="Bot automatically joins meetings where it has been invited or enabled per user." />
-              <Toggle checked={consentPrompt} onChange={setConsentPrompt} label="Consent announcement on join" desc="Bot announces its presence and recording intent when joining. Required for compliance." />
-            </div>
-          </div>
-
-          <div className="card p-5 border-error-500/30">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle size={16} className="text-error-400" />
-              <h3 className="text-sm font-semibold text-error-300">Emergency Stop</h3>
-            </div>
-            <p className="text-xs text-neutral-500 mb-4">Immediately halt all VMA bot activity across all meetings. Use in the event of a security incident or compliance concern.</p>
-            <div className="flex items-center justify-between p-4 rounded-xl border border-error-500/30 bg-error-500/5">
-              <div>
-                <p className="text-sm font-semibold text-neutral-100">Stop all active bots now</p>
-                <p className="text-xs text-neutral-500">This will immediately disconnect the VMA bot from all active meetings and suspend the service. Requires Super Admin role.</p>
-              </div>
-              <button className="btn-danger flex-shrink-0 ml-4">
-                <AlertTriangle size={15} /> Emergency Stop
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button onClick={save} className={saved ? 'btn-secondary' : 'btn-primary'}>
-              {saved ? <><Check size={15} /> Saved</> : 'Save Service Settings'}
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

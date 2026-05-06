@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 interface BarChartProps {
   data: { label: string; value: number; value2?: number }[];
@@ -72,7 +72,7 @@ export function MiniLineChart({ data, height = 60, color = '#007be8' }: LineChar
       </defs>
       <path d={areaD} fill="url(#lineGrad)" />
       <path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      {data.map((d, i) => {
+      {data.map((_, i) => {
         const [x, y] = points[i].split(',');
         return <circle key={i} cx={x} cy={y} r="3" fill={color} />;
       })}

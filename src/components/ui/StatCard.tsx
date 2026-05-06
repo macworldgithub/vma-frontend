@@ -1,4 +1,3 @@
-import React from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
@@ -13,9 +12,9 @@ interface StatCardProps {
 }
 
 const trendIcon = { up: TrendingUp, down: TrendingDown, stable: Minus };
-const trendColor = { up: 'text-success-400', down: 'text-error-400', stable: 'text-neutral-500' };
+const trendColor = { up: 'text-emerald-400', down: 'text-rose-400', stable: 'text-neutral-500' };
 
-export function StatCard({ label, value, subtext, icon: Icon, iconColor = 'text-brand-400', trend, trendLabel }: StatCardProps) {
+export function StatCard({ label, value, subtext, icon: Icon, iconColor = 'text-blue-400', trend, trendLabel }: StatCardProps) {
   const TrendIcon = trend ? trendIcon[trend] : null;
   return (
     <div className="card p-5 flex flex-col gap-3 hover:border-neutral-700 transition-colors duration-150">

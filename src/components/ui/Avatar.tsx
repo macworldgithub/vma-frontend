@@ -1,17 +1,16 @@
-import React from 'react';
 import { initials } from '../../utils/format';
 
 interface AvatarProps {
   name: string;
   url?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-const sizeClass = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-11 h-11 text-base' };
+const sizeClass = { xs: 'w-6 h-6 text-[10px]', sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-11 h-11 text-base' };
 
 const colors = [
-  'bg-brand-600', 'bg-accent-600', 'bg-success-600', 'bg-warning-600',
-  'bg-error-600', 'bg-neutral-600',
+  'bg-blue-600', 'bg-cyan-600', 'bg-emerald-600', 'bg-amber-600',
+  'bg-rose-600', 'bg-slate-600',
 ];
 
 function hashColor(name: string) {

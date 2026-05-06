@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'admin' | 'read_only';
+export type UserRole = 'super_admin' | 'dept_admin' | 'read_only';
 export type UserStatus = 'active' | 'suspended';
 export type MeetingPlatform = 'teams' | 'zoom' | 'google_meet';
 export type MeetingStatus = 'scheduled' | 'active' | 'completed' | 'cancelled';
@@ -14,6 +14,9 @@ export interface User {
   lastActive: string;
   meetingsJoined: number;
   avatarUrl?: string;
+  botEnabled?: boolean;
+  platforms?: MeetingPlatform[];
+  group?: string;
 }
 
 export interface Meeting {
@@ -68,6 +71,15 @@ export interface SystemMetric {
   trendValue?: string;
 }
 
+export interface PlatformStatus {
+  platform: MeetingPlatform;
+  status: 'connected' | 'degraded' | 'disconnected';
+  activeMeetings: number;
+  latency: string;
+  lastSync: string;
+  version?: string;
+}
+
 export type Page =
   | 'dashboard'
   | 'users'
@@ -77,4 +89,5 @@ export type Page =
   | 'branding'
   | 'audit-logs'
   | 'settings'
+  | 'service-control'
   | 'login';

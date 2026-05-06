@@ -23,7 +23,7 @@ export function formatDuration(minutes: number): string {
 export function roleLabel(role: string): string {
   const map: Record<string, string> = {
     super_admin: 'Super Admin',
-    admin: 'Admin',
+    dept_admin: 'Department Admin',
     read_only: 'Read Only',
   };
   return map[role] ?? role;

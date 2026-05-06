@@ -9,6 +9,7 @@ import { MonitoringPage } from './pages/MonitoringPage';
 import { BrandingPage } from './pages/BrandingPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ServiceControlPage } from './pages/ServiceControlPage';
 import { useTheme } from './hooks/useTheme';
 import type { Page } from './types';
 
@@ -28,15 +29,16 @@ export default function App() {
 
   function renderPage() {
     switch (page) {
-      case 'dashboard':    return <DashboardPage onNavigate={navigate} />;
-      case 'users':        return <UsersPage />;
-      case 'meetings':     return <MeetingsPage onNavigate={navigate} />;
+      case 'dashboard': return <DashboardPage onNavigate={navigate} />;
+      case 'users': return <UsersPage />;
+      case 'meetings': return <MeetingsPage onNavigate={navigate} />;
       case 'meeting-detail': return <MeetingDetailPage meetingId={meetingId} onNavigate={navigate} />;
-      case 'monitoring':   return <MonitoringPage onNavigate={navigate} />;
-      case 'branding':     return <BrandingPage />;
-      case 'audit-logs':   return <AuditLogsPage />;
-      case 'settings':     return <SettingsPage />;
-      default:             return <DashboardPage onNavigate={navigate} />;
+      case 'monitoring': return <MonitoringPage onNavigate={navigate} />;
+      case 'branding': return <BrandingPage />;
+      case 'audit-logs': return <AuditLogsPage />;
+      case 'settings': return <SettingsPage />;
+      case 'service-control': return <ServiceControlPage />;
+      default: return <DashboardPage onNavigate={navigate} />;
     }
   }
 

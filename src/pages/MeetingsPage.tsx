@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Video, Clock, Users, ArrowRight, Filter } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Video, Clock, Users, Filter, Calendar, ChevronRight, Play, FileText, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { mockMeetings } from '../data/mockData';
@@ -10,21 +10,15 @@ interface MeetingsPageProps {
   onNavigate: (page: Page, extra?: string) => void;
 }
 
-const platformBadge: Record<MeetingPlatform, { variant: 'info' | 'success' | 'warning' }> = {
-  teams:       { variant: 'info' },
-  zoom:        { variant: 'warning' },
-  google_meet: { variant: 'success' },
-};
-
 const statusBadge: Record<MeetingStatus, 'active' | 'success' | 'warning' | 'neutral'> = {
-  active:    'active',
+  active: 'active',
   completed: 'success',
   scheduled: 'warning',
   cancelled: 'neutral',
 };
 
-const platformIcon: Record<MeetingPlatform, string> = {
-  teams: '#005A9E',
+const platformColors: Record<MeetingPlatform, string> = {
+  teams: '#7B83EB',
   zoom: '#2D8CFF',
   google_meet: '#00AC47',
 };
@@ -41,101 +35,145 @@ export function MeetingsPage({ onNavigate }: MeetingsPageProps) {
     return matchSearch && matchStatus && matchPlatform;
   });
 
-  const byStatus = (s: MeetingStatus) => mockMeetings.filter(m => m.status === s).length;
+  const getStatusCount = (s: MeetingStatus) => mockMeetings.filter(m => m.status === s).length;
 
   return (
-    <div className="p-6 space-y-5 animate-fade-in">
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="p-6 space-y-6 animate-fade-in max-w-7xl">
+      {/* Platform Status Overview */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {(['active', 'scheduled', 'completed', 'cancelled'] as MeetingStatus[]).map(s => (
           <button
             key={s}
             onClick={() => setStatusFilter(statusFilter === s ? 'all' : s)}
-            className={`card p-4 text-left hover:border-neutral-700 transition-all ${statusFilter === s ? 'border-brand-500/50 bg-brand-500/5' : ''}`}
+            className={`card p-5 text-left transition-all relative overflow-hidden group ${statusFilter === s ? 'ring-1 ring-blue-500/50 bg-blue-500/10' : 'hover:bg-neutral-800/30'}`}
           >
-            <div className="text-xl font-bold text-neutral-100 mb-1">{byStatus(s)}</div>
-            <Badge variant={statusBadge[s]} dot={s === 'active'}>{s.charAt(0).toUpperCase() + s.slice(1)}</Badge>
+            <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity ${s === 'active' ? 'text-cyan-400' : ''}`}>
+              {s === 'active' && <Play size={40} />}
+              {s === 'completed' && <CheckCircle2 size={40} />}
+              {s === 'scheduled' && <Calendar size={40} />}
+            </div>
+            <p className="text-2xl font-bold text-neutral-100 mb-1">{getStatusCount(s)}</p>
+            <div className="flex items-center gap-2">
+              <Badge variant={statusBadge[s]} dot={s === 'active'}>
+                <span className="capitalize">{s}</span>
+              </Badge>
+            </div>
           </button>
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-neutral-800/70 border border-neutral-700/50 rounded-lg px-3 py-2">
-          <Search size={14} className="text-neutral-500" />
+      {/* Advanced Filters */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" size={18} />
           <input
             type="text"
-            placeholder="Search meetings..."
+            placeholder="Search meeting titles, organizers, or departments..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-neutral-300 placeholder-neutral-600 outline-none w-full"
+            className="input pl-12 h-12 bg-neutral-900/50"
           />
         </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as MeetingStatus | 'all')} className="input w-auto text-xs">
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="completed">Completed</option>
-        </select>
-        <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value as MeetingPlatform | 'all')} className="input w-auto text-xs">
-          <option value="all">All Platforms</option>
-          <option value="teams">MS Teams</option>
-          <option value="zoom">Zoom</option>
-          <option value="google_meet">Google Meet</option>
-        </select>
+        <div className="flex gap-3">
+          <select
+            value={platformFilter}
+            onChange={e => setPlatformFilter(e.target.value as MeetingPlatform | 'all')}
+            className="input w-auto min-w-[160px] h-12"
+          >
+            <option value="all">All Platforms</option>
+            <option value="teams">Microsoft Teams</option>
+            <option value="zoom">Zoom Video</option>
+            <option value="google_meet">Google Meet</option>
+          </select>
+          <button className="btn-secondary h-12 px-6">
+            <Filter size={18} /> Filters
+          </button>
+        </div>
       </div>
 
-      {/* Meeting cards */}
-      <div className="space-y-3">
+      {/* Meeting Session Cards */}
+      <div className="space-y-4">
         {filtered.map(m => {
-          const pb = platformBadge[m.platform];
+          const color = platformColors[m.platform];
           return (
             <div
               key={m.id}
               onClick={() => onNavigate('meeting-detail', m.id)}
-              className="card p-5 hover:border-neutral-700 cursor-pointer transition-all group"
+              className="card p-0 group cursor-pointer transition-all hover:scale-[1.005] hover:shadow-2xl overflow-hidden"
+              style={{ borderLeft: `4px solid ${color}` }}
             >
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: platformIcon[m.platform] + '20' }}>
-                  <Video size={18} style={{ color: platformIcon[m.platform] }} />
+              <div className="p-5 flex flex-col md:flex-row md:items-center gap-6">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${color}15`, color }}
+                >
+                  <Video size={28} />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 className="text-sm font-semibold text-neutral-100 group-hover:text-white">{m.title}</h3>
-                    <Badge variant={statusBadge[m.status]} dot={m.status === 'active'}>{m.status.charAt(0).toUpperCase() + m.status.slice(1)}</Badge>
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-base font-bold text-neutral-100 group-hover:text-blue-400 transition-colors">{m.title}</h3>
+                    <Badge variant={statusBadge[m.status]} dot={m.status === 'active'}>
+                      <span className="capitalize">{m.status}</span>
+                    </Badge>
                   </div>
 
-                  <div className="flex flex-wrap gap-4 text-xs text-neutral-500">
-                    <Badge variant={pb.variant}>{platformLabel(m.platform)}</Badge>
-                    <span className="flex items-center gap-1"><Clock size={11} />{formatDateTime(m.startTime)}</span>
-                    {m.duration && <span className="flex items-center gap-1"><Clock size={11} />{formatDuration(m.duration)}</span>}
-                    <span className="flex items-center gap-1"><Users size={11} />{m.participants.length} participants</span>
-                    <span className="text-neutral-600">{m.department}</span>
-                  </div>
-
-                  {/* Participants */}
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex -space-x-2">
-                      {m.participants.slice(0, 4).map(p => (
-                        <Avatar key={p} name={p} size="sm" />
-                      ))}
-                      {m.participants.length > 4 && (
-                        <div className="w-7 h-7 rounded-full bg-neutral-800 border-2 border-neutral-900 flex items-center justify-center text-2xs text-neutral-500 font-medium" style={{ fontSize: '9px' }}>
-                          +{m.participants.length - 4}
-                        </div>
-                      )}
+                  <div className="flex flex-wrap items-center gap-y-2 gap-x-6">
+                    <div className="flex items-center gap-2 text-xs text-neutral-400 font-medium">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                      {platformLabel(m.platform)}
                     </div>
-                    <span className="text-2xs text-neutral-600" style={{ fontSize: '10px' }}>{m.organizer} (organiser)</span>
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                      <Clock size={14} className="text-neutral-600" />
+                      {formatDateTime(m.startTime)}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                      <Users size={14} className="text-neutral-600" />
+                      {m.participants.length} Participants
+                    </div>
+                    {m.duration && (
+                      <div className="text-xs text-neutral-600 font-mono">
+                        {formatDuration(m.duration)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 hidden sm:flex items-center gap-2">
-                  {m.summary && <Badge variant="success">Summary ready</Badge>}
-                  {m.actionItems && m.actionItems.length > 0 && (
-                    <Badge variant="info">{m.actionItems.length} actions</Badge>
+                <div className="flex items-center gap-6">
+                  <div className="hidden lg:flex flex-col items-end gap-1">
+                    <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Organized By</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-neutral-300">{m.organizer}</span>
+                      <Avatar name={m.organizer} size="sm" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {m.summary && (
+                      <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400" title="Summary Ready">
+                        <FileText size={18} />
+                      </div>
+                    )}
+                    <div className="w-9 h-9 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-500 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                      <ChevronRight size={20} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview Participants Strip */}
+              <div className="px-5 py-2.5 bg-neutral-900/40 border-t border-neutral-800/50 flex items-center justify-between">
+                <div className="flex -space-x-1.5">
+                  {m.participants.slice(0, 6).map((p, i) => (
+                    <Avatar key={i} name={p} size="sm" />
+                  ))}
+                  {m.participants.length > 6 && (
+                    <div className="w-7 h-7 rounded-full bg-neutral-800 border-2 border-neutral-950 flex items-center justify-center text-[9px] font-bold text-neutral-500">
+                      +{m.participants.length - 6}
+                    </div>
                   )}
-                  <ArrowRight size={16} className="text-neutral-600 group-hover:text-neutral-400 transition-colors ml-1" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">{m.department}</span>
                 </div>
               </div>
             </div>
@@ -143,9 +181,16 @@ export function MeetingsPage({ onNavigate }: MeetingsPageProps) {
         })}
 
         {filtered.length === 0 && (
-          <div className="card p-12 text-center">
-            <Video size={32} className="text-neutral-700 mx-auto mb-3" />
-            <p className="text-neutral-500 text-sm">No meetings match your filters</p>
+          <div className="card p-20 text-center">
+            <Video size={48} className="text-neutral-800 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-neutral-300">No sessions found</h3>
+            <p className="text-neutral-500">Try adjusting your filters or search terms</p>
+            <button
+              onClick={() => { setSearch(''); setStatusFilter('all'); setPlatformFilter('all'); }}
+              className="btn-secondary mt-6 text-xs px-6"
+            >
+              Clear All Filters
+            </button>
           </div>
         )}
       </div>

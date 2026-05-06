@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UserPlus, Upload, Search, MoreHorizontal, CreditCard as Edit2, Trash2, UserX, UserCheck } from 'lucide-react';
+import { useState } from 'react';
+import { UserPlus, Upload, Search, MoreHorizontal, CreditCard as Edit2, Trash2, UserX, UserCheck, Download, Mail, ShieldCheck, Users, Zap } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { Modal } from '../components/ui/Modal';
@@ -7,17 +7,19 @@ import { mockUsers } from '../data/mockData';
 import { roleLabel, formatDateTime } from '../utils/format';
 import type { User, UserRole, UserStatus } from '../types';
 
-const roleBadge: Record<UserRole, 'error' | 'info' | 'neutral'> = {
-  super_admin: 'error',
-  admin:       'info',
-  read_only:   'neutral',
+
+
+const roleColors: Record<UserRole, string> = {
+  super_admin: '#ef4444',
+  dept_admin: '#007be8',
+  read_only: '#94a3b8',
 };
 
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all');
+  const [statusFilter] = useState<UserStatus | 'all'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -36,8 +38,10 @@ export function UsersPage() {
   }
 
   function deleteUser(id: string) {
-    setUsers(prev => prev.filter(u => u.id !== id));
-    setMenuOpenId(null);
+    if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
+      setUsers(prev => prev.filter(u => u.id !== id));
+      setMenuOpenId(null);
+    }
   }
 
   function addUser() {
@@ -47,6 +51,9 @@ export function UsersPage() {
       status: 'active',
       lastActive: new Date().toISOString(),
       meetingsJoined: 0,
+      botEnabled: true,
+      platforms: ['teams'],
+      group: newUser.department
     };
     setUsers(prev => [...prev, user]);
     setNewUser({ name: '', email: '', role: 'read_only', department: '' });
@@ -56,62 +63,85 @@ export function UsersPage() {
   const activeCount = users.filter(u => u.status === 'active').length;
 
   return (
-    <div className="p-6 space-y-5 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-neutral-400">
-            <span className="text-neutral-100 font-medium">{activeCount}</span> active seats ·{' '}
-            <span className="text-neutral-100 font-medium">{100 - activeCount}</span> available of 100 total
-          </p>
+    <div className="p-6 space-y-6 animate-fade-in max-w-7xl">
+      {/* Header Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <Users size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Total Users</p>
+            <p className="text-2xl font-bold text-neutral-100">{users.length}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="card p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <ShieldCheck size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Active Seats</p>
+            <p className="text-2xl font-bold text-neutral-100">{activeCount} / 100</p>
+          </div>
+        </div>
+        <div className="card p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+            <Mail size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Pending Invites</p>
+            <p className="text-2xl font-bold text-neutral-100">3</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions & Filters */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-1 items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={16} />
+            <input
+              type="text"
+              placeholder="Search by name, email or department..."
+              className="input pl-10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value as UserRole | 'all')}
+            className="input w-auto min-w-[140px]"
+          >
+            <option value="all">All Roles</option>
+            <option value="super_admin">Super Admin</option>
+            <option value="dept_admin">Department Admin</option>
+            <option value="read_only">Read Only</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-3">
           <button onClick={() => setShowBulkModal(true)} className="btn-secondary">
-            <Upload size={15} /> Bulk Import CSV
+            <Upload size={16} /> Bulk Import
           </button>
           <button onClick={() => setShowAddModal(true)} className="btn-primary">
-            <UserPlus size={15} /> Add User
+            <UserPlus size={16} /> Add User
           </button>
         </div>
       </div>
 
-      {/* Seat utilisation */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-2 text-xs">
-          <span className="text-neutral-500">Seat utilisation</span>
-          <span className="text-neutral-200 font-medium">{activeCount}/100 seats active</span>
+      {/* Seat Utilisation Bar */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-neutral-400">Seat Utilisation</span>
+          <span className="text-xs font-bold text-neutral-200">{activeCount}% used</span>
         </div>
-        <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
+        <div className="progress-bar">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${activeCount > 90 ? 'bg-error-500' : activeCount > 70 ? 'bg-warning-500' : 'bg-brand-500'}`}
+            className={`progress-bar-fill ${activeCount > 90 ? 'danger' : activeCount > 70 ? 'warning' : ''}`}
             style={{ width: `${activeCount}%` }}
           />
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-neutral-800/70 border border-neutral-700/50 rounded-lg px-3 py-2">
-          <Search size={14} className="text-neutral-500 flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="bg-transparent text-sm text-neutral-300 placeholder-neutral-600 outline-none w-full"
-          />
-        </div>
-        <select value={roleFilter} onChange={e => setRoleFilter(e.target.value as UserRole | 'all')} className="input w-auto text-xs">
-          <option value="all">All Roles</option>
-          <option value="super_admin">Super Admin</option>
-          <option value="admin">Admin</option>
-          <option value="read_only">Read Only</option>
-        </select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as UserStatus | 'all')} className="input w-auto text-xs">
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
-        </select>
       </div>
 
       {/* Table */}
@@ -119,53 +149,90 @@ export function UsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-neutral-800 bg-neutral-900/80">
-                <th className="text-left text-xs font-medium text-neutral-500 px-5 py-3">User</th>
-                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-3 hidden md:table-cell">Department</th>
-                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-3">Role</th>
-                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-3">Status</th>
-                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-3 hidden lg:table-cell">Last Active</th>
-                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-3 hidden lg:table-cell">Meetings</th>
-                <th className="w-10 px-4 py-3" />
+              <tr style={{ borderBottom: '1px solid rgba(51,65,85,0.25)', background: 'rgba(30,41,59,0.2)' }}>
+                <th className="text-left text-xs font-medium text-neutral-500 px-5 py-4">User Details</th>
+                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-4 hidden sm:table-cell">Role</th>
+                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-4 hidden md:table-cell">Department</th>
+                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-4 hidden lg:table-cell">Status</th>
+                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-4 hidden xl:table-cell">Bot Access</th>
+                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-4 hidden xl:table-cell">Last Active</th>
+                <th className="text-left text-xs font-medium text-neutral-500 px-4 py-4 hidden lg:table-cell">Usage</th>
+                <th className="text-right text-xs font-medium text-neutral-500 px-5 py-4">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800/50">
               {filtered.map(user => (
-                <tr key={user.id} className="table-row-hover">
-                  <td className="px-5 py-3.5">
+                <tr key={user.id} className="table-row-hover group/row">
+                  <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <Avatar name={user.name} url={user.avatarUrl} size="sm" />
+                      <Avatar name={user.name} url={user.avatarUrl} size="md" />
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-neutral-200 truncate">{user.name}</p>
-                        <p className="text-2xs text-neutral-600 truncate" style={{ fontSize: '10px' }}>{user.email}</p>
+                        <p className="text-sm font-semibold text-neutral-200 truncate">{user.name}</p>
+                        <p className="text-xs text-neutral-500 truncate">{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 hidden md:table-cell text-xs text-neutral-400">{user.department}</td>
-                  <td className="px-4 py-3.5"><Badge variant={roleBadge[user.role]}>{roleLabel(user.role)}</Badge></td>
-                  <td className="px-4 py-3.5">
-                    <Badge variant={user.status === 'active' ? 'success' : 'error'} dot={user.status === 'active'}>
+                  <td className="px-4 py-4 hidden sm:table-cell">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: roleColors[user.role] }} />
+                      <span className="text-xs font-medium text-neutral-300">{roleLabel(user.role)}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-xs text-neutral-400 hidden md:table-cell">{user.department}</td>
+                  <td className="px-4 py-4 hidden lg:table-cell">
+                    <Badge variant={user.status === 'active' ? 'success' : 'neutral'} dot={user.status === 'active'}>
                       {user.status === 'active' ? 'Active' : 'Suspended'}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3.5 hidden lg:table-cell text-xs text-neutral-500">{formatDateTime(user.lastActive)}</td>
-                  <td className="px-4 py-3.5 hidden lg:table-cell text-xs text-neutral-400">{user.meetingsJoined}</td>
-                  <td className="px-4 py-3.5 relative">
-                    <button onClick={() => setMenuOpenId(menuOpenId === user.id ? null : user.id)} className="btn-ghost p-1 rounded">
-                      <MoreHorizontal size={14} />
+                  <td className="px-4 py-4 hidden xl:table-cell">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${user.botEnabled ? 'bg-emerald-400' : 'bg-neutral-600'}`} />
+                      <span className="text-[11px] text-neutral-300">{user.botEnabled ? 'Enabled' : 'Disabled'}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-xs text-neutral-500 hidden xl:table-cell">
+                    {formatDateTime(user.lastActive)}
+                  </td>
+                  <td className="px-4 py-4 hidden lg:table-cell">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500/50" style={{ width: `${Math.min((user.meetingsJoined / 150) * 100, 100)}%` }} />
+                      </div>
+                      <span className="text-[10px] text-neutral-500 font-mono">{user.meetingsJoined}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-right relative">
+                    <button
+                      onClick={() => setMenuOpenId(menuOpenId === user.id ? null : user.id)}
+                      className="btn-ghost p-1.5 rounded-lg hover:bg-neutral-800"
+                    >
+                      <MoreHorizontal size={16} />
                     </button>
+
                     {menuOpenId === user.id && (
-                      <div className="absolute right-4 top-10 z-20 w-44 bg-neutral-900 border border-neutral-800 rounded-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] animate-slide-in overflow-hidden">
+                      <div className="absolute right-12 top-4 z-20 w-48 animate-scale-in rounded-xl overflow-hidden glass-panel shadow-2xl"
+                        style={{ border: '1px solid rgba(51,65,85,0.4)' }}
+                      >
                         <button className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-neutral-300 hover:bg-neutral-800 transition-colors">
-                          <Edit2 size={13} /> Edit User
+                          <Edit2 size={14} /> Edit Profile
                         </button>
                         <button onClick={() => toggleStatus(user.id)} className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-neutral-300 hover:bg-neutral-800 transition-colors">
-                          {user.status === 'active' ? <UserX size={13} /> : <UserCheck size={13} />}
-                          {user.status === 'active' ? 'Suspend' : 'Activate'}
+                          {user.status === 'active' ? <UserX size={14} className="text-amber-400" /> : <UserCheck size={14} className="text-emerald-400" />}
+                          {user.status === 'active' ? 'Suspend User' : 'Activate User'}
                         </button>
-                        <div className="border-t border-neutral-800" />
-                        <button onClick={() => deleteUser(user.id)} className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-error-400 hover:bg-error-500/10 transition-colors">
-                          <Trash2 size={13} /> Remove User
+                        <button
+                          onClick={() => {
+                            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, botEnabled: !u.botEnabled } : u));
+                            setMenuOpenId(null);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-neutral-300 hover:bg-neutral-800 transition-colors"
+                        >
+                          <Zap size={14} className={user.botEnabled ? 'text-amber-400' : 'text-neutral-500'} />
+                          {user.botEnabled ? 'Disable Assistant' : 'Enable Assistant'}
+                        </button>
+                        <div className="h-px bg-neutral-800" />
+                        <button onClick={() => deleteUser(user.id)} className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 transition-colors">
+                          <Trash2 size={14} /> Remove User
                         </button>
                       </div>
                     )}
@@ -173,66 +240,88 @@ export function UsersPage() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-10 text-neutral-600 text-sm">No users match your filters</td></tr>
+                <tr>
+                  <td colSpan={7} className="text-center py-20">
+                    <Users size={40} className="mx-auto text-neutral-800 mb-4" />
+                    <p className="text-neutral-500">No users found matching your search</p>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-3 border-t border-neutral-800 text-xs text-neutral-600">
-          Showing {filtered.length} of {users.length} users
+        <div className="p-4 bg-neutral-900/30 flex items-center justify-between" style={{ borderTop: '1px solid rgba(51,65,85,0.2)' }}>
+          <p className="text-xs text-neutral-500">
+            Showing <span className="text-neutral-300 font-bold">{filtered.length}</span> of {users.length} total users
+          </p>
+          <div className="flex gap-2">
+            <button className="btn-secondary text-xs px-4 py-1.5"><Download size={14} /> Export CSV</button>
+          </div>
         </div>
       </div>
 
       {/* Add User Modal */}
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add New User">
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Provision New User" size="md">
         <div className="space-y-4">
-          <div>
-            <label className="label">Full name</label>
-            <input className="input" placeholder="Jane Smith" value={newUser.name} onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Full Name</label>
+              <input className="input" placeholder="Jane Smith" value={newUser.name} onChange={e => setNewUser(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Department</label>
+              <input className="input" placeholder="Sales" value={newUser.department} onChange={e => setNewUser(p => ({ ...p, department: e.target.value }))} />
+            </div>
           </div>
           <div>
-            <label className="label">Work email</label>
+            <label className="label">Work Email (Microsoft Entra ID)</label>
             <input className="input" type="email" placeholder="jane.smith@pattersoncheyney.com.au" value={newUser.email} onChange={e => setNewUser(p => ({ ...p, email: e.target.value }))} />
           </div>
           <div>
-            <label className="label">Department</label>
-            <input className="input" placeholder="e.g. Sales, Service, Finance" value={newUser.department} onChange={e => setNewUser(p => ({ ...p, department: e.target.value }))} />
+            <label className="label">Access Role</label>
+            <div className="grid grid-cols-3 gap-3">
+              {(['read_only', 'dept_admin', 'super_admin'] as UserRole[]).map(role => (
+                <button
+                  key={role}
+                  onClick={() => setNewUser(p => ({ ...p, role }))}
+                  className={`p-3 rounded-xl border text-center transition-all ${newUser.role === role ? 'bg-blue-600/10 border-blue-500 text-white' : 'border-neutral-700 text-neutral-500 hover:border-neutral-600'}`}
+                >
+                  <p className="text-xs font-bold capitalize">{role.replace('_', ' ').replace('dept', 'Department')}</p>
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <label className="label">Role</label>
-            <select className="input" value={newUser.role} onChange={e => setNewUser(p => ({ ...p, role: e.target.value as UserRole }))}>
-              <option value="read_only">Read Only</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button onClick={() => setShowAddModal(false)} className="btn-secondary">Cancel</button>
-            <button onClick={addUser} disabled={!newUser.name || !newUser.email} className="btn-primary">Add User</button>
+          <div className="pt-4 flex justify-end gap-3">
+            <button onClick={() => setShowAddModal(false)} className="btn-ghost">Cancel</button>
+            <button onClick={addUser} disabled={!newUser.name || !newUser.email} className="btn-primary px-8">Create Account</button>
           </div>
         </div>
       </Modal>
 
       {/* Bulk Import Modal */}
-      <Modal open={showBulkModal} onClose={() => setShowBulkModal(false)} title="Bulk Import Users (CSV)">
-        <div className="space-y-4">
-          <div className="border-2 border-dashed border-neutral-700 rounded-xl p-8 text-center hover:border-brand-500/50 transition-colors">
-            <Upload size={24} className="text-neutral-600 mx-auto mb-3" />
-            <p className="text-sm text-neutral-400 mb-1">Drop your CSV file here</p>
-            <p className="text-xs text-neutral-600 mb-4">Required columns: name, email, department, role</p>
-            <button className="btn-secondary text-xs">Browse file</button>
+      <Modal open={showBulkModal} onClose={() => setShowBulkModal(false)} title="Bulk User Import" size="md">
+        <div className="space-y-6">
+          <div className="border-2 border-dashed border-neutral-800 rounded-2xl p-10 text-center hover:border-blue-500/50 transition-all cursor-pointer group">
+            <div className="w-16 h-16 rounded-2xl bg-neutral-800 mx-auto mb-4 flex items-center justify-center text-neutral-600 group-hover:text-blue-400 transition-colors">
+              <Upload size={32} />
+            </div>
+            <h3 className="text-sm font-bold text-neutral-200 mb-1">Upload CSV File</h3>
+            <p className="text-xs text-neutral-500 mb-6">Drag and drop your user directory file here</p>
+            <button className="btn-secondary text-xs px-6">Browse Files</button>
           </div>
-          <div className="bg-neutral-800/50 rounded-lg p-3">
-            <p className="text-xs font-medium text-neutral-400 mb-2">CSV format example:</p>
-            <code className="text-2xs text-neutral-500 font-mono block" style={{ fontSize: '10px' }}>
-              name,email,department,role<br />
-              Jane Smith,jane@pattersoncheyney.com.au,Sales,read_only<br />
-              John Doe,john@pattersoncheyney.com.au,Finance,admin
+
+          <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+            <p className="text-[11px] font-bold text-blue-400 uppercase tracking-widest mb-3">CSV Format Guide</p>
+            <code className="text-[10px] text-neutral-500 font-mono block leading-relaxed">
+              name, email, department, role<br />
+              Jane Smith, jane@pattersoncheyney.com.au, Sales, dept_admin<br />
+              John Doe, john@pattersoncheyney.com.au, HR, read_only
             </code>
           </div>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setShowBulkModal(false)} className="btn-secondary">Cancel</button>
-            <button className="btn-primary" disabled>Import Users</button>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setShowBulkModal(false)} className="btn-ghost">Cancel</button>
+            <button className="btn-primary px-8" disabled>Process Import</button>
           </div>
         </div>
       </Modal>

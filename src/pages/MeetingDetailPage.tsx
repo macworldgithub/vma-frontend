@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Video, Clock, Users, CheckSquare, FileText, MessageSquare, Download, Send } from 'lucide-react';
+import { useState } from 'react';
+import {
+  ChevronLeft, Video, Clock, Calendar, Download,
+  Share2, CheckSquare, MessageSquare, Shield,
+  ArrowUpRight, PlayCircle, Search, ExternalLink, Sparkles
+} from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { Avatar } from '../components/ui/Avatar';
 import { mockMeetings } from '../data/mockData';
@@ -11,226 +15,274 @@ interface MeetingDetailPageProps {
   onNavigate: (page: Page) => void;
 }
 
-type Tab = 'summary' | 'transcript' | 'actions';
-
-const platformIcon: Record<string, string> = {
-  teams: '#005A9E',
+const platformColors: Record<string, string> = {
+  teams: '#7B83EB',
   zoom: '#2D8CFF',
   google_meet: '#00AC47',
 };
 
-const priorityBadge: Record<string, 'error' | 'warning' | 'neutral'> = {
-  high: 'error', medium: 'warning', low: 'neutral',
-};
-
-const actionStatusBadge: Record<string, 'success' | 'info' | 'neutral'> = {
-  done: 'success', in_progress: 'info', open: 'neutral',
-};
-
 export function MeetingDetailPage({ meetingId, onNavigate }: MeetingDetailPageProps) {
-  const [tab, setTab] = useState<Tab>('summary');
-  const meeting = mockMeetings.find(m => m.id === meetingId);
+  const meeting = mockMeetings.find(m => m.id === meetingId) || mockMeetings[0];
+  const [activeTab, setActiveTab] = useState<'summary' | 'transcript' | 'action-items'>('summary');
+  const [searchTranscript, setSearchTranscript] = useState('');
 
-  if (!meeting) {
-    return (
-      <div className="p-6">
-        <button onClick={() => onNavigate('meetings')} className="btn-ghost mb-4"><ArrowLeft size={16} /> Back</button>
-        <p className="text-neutral-500">Meeting not found.</p>
-      </div>
-    );
-  }
-
-  const statusBadge = { active: 'active', completed: 'success', scheduled: 'warning', cancelled: 'neutral' } as const;
+  const color = platformColors[meeting.platform];
 
   return (
-    <div className="p-6 space-y-5 animate-fade-in max-w-5xl">
-      {/* Back */}
-      <button onClick={() => onNavigate('meetings')} className="btn-ghost -ml-1">
-        <ArrowLeft size={16} /> Back to Meetings
-      </button>
-
-      {/* Header */}
-      <div className="card p-6">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: platformIcon[meeting.platform] + '25' }}>
-            <Video size={22} style={{ color: platformIcon[meeting.platform] }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-2">
-              <h1 className="text-lg font-bold text-neutral-100">{meeting.title}</h1>
-              <Badge variant={statusBadge[meeting.status] as 'active' | 'success' | 'warning' | 'neutral'} dot={meeting.status === 'active'}>
-                {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
-              </Badge>
-            </div>
-            <div className="flex flex-wrap gap-4 text-xs text-neutral-500">
-              <Badge variant={meeting.platform === 'teams' ? 'info' : meeting.platform === 'zoom' ? 'warning' : 'success'}>
-                {platformLabel(meeting.platform)}
-              </Badge>
-              <span className="flex items-center gap-1"><Clock size={11} /> {formatDateTime(meeting.startTime)}</span>
-              {meeting.duration && <span className="flex items-center gap-1"><Clock size={11} /> {formatDuration(meeting.duration)}</span>}
-              <span className="flex items-center gap-1"><Users size={11} /> {meeting.participants.length} participants</span>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button className="btn-secondary text-xs"><Download size={14} /> Download PDF</button>
-            <button className="btn-primary text-xs"><Send size={14} /> Send Summary</button>
-          </div>
-        </div>
-
-        {/* Participants */}
-        <div className="mt-5 pt-5 border-t border-neutral-800">
-          <p className="text-xs font-medium text-neutral-500 mb-3">Participants</p>
-          <div className="flex flex-wrap gap-2">
-            {meeting.participants.map(p => (
-              <div key={p} className="flex items-center gap-2 bg-neutral-800/60 rounded-full px-3 py-1.5">
-                <Avatar name={p} size="sm" />
-                <span className="text-xs text-neutral-300">{p}</span>
-                {p === meeting.organizer && <span className="text-2xs text-neutral-600" style={{ fontSize: '9px' }}>(org)</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 bg-neutral-900 border border-neutral-800 rounded-xl p-1 w-fit">
-        {([
-          { key: 'summary',    label: 'Summary',     icon: FileText },
-          { key: 'transcript', label: 'Transcript',  icon: MessageSquare },
-          { key: 'actions',    label: 'Action Items', icon: CheckSquare },
-        ] as { key: Tab; label: string; icon: React.ElementType }[]).map(({ key, label, icon: Icon }) => (
+    <div className="animate-fade-in">
+      {/* Header Area */}
+      <div className="bg-neutral-900/40 border-b border-neutral-800/60 sticky top-0 z-20 backdrop-blur-xl">
+        <div className="p-6 max-w-7xl mx-auto">
           <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === key
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800'
-            }`}
+            onClick={() => onNavigate('meetings')}
+            className="btn-ghost text-xs mb-6 -ml-2"
           >
-            <Icon size={15} /> {label}
+            <ChevronLeft size={16} /> Back to Sessions
           </button>
-        ))}
+
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+            <div className="flex gap-5 min-w-0">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${color}15`, color }}
+              >
+                <Video size={32} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  <h1 className="text-2xl font-bold text-neutral-100 truncate">{meeting.title}</h1>
+                  <Badge variant={meeting.status === 'active' ? 'active' : 'success'} dot={meeting.status === 'active'}>
+                    <span className="capitalize">{meeting.status}</span>
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-neutral-500">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={14} className="text-neutral-600" />
+                    {formatDateTime(meeting.startTime)}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-neutral-600" />
+                    {meeting.duration ? formatDuration(meeting.duration) : 'Session in progress'}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                    {platformLabel(meeting.platform)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button className="btn-secondary">
+                <Download size={16} /> Export
+              </button>
+              <button className="btn-primary">
+                <Share2 size={16} /> Share Report
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 flex items-center gap-1 p-1 bg-neutral-950/50 rounded-xl border border-neutral-800/50 w-full md:w-fit overflow-x-auto no-scrollbar">
+            {[
+              { id: 'summary', label: 'AI Summary', icon: Sparkles },
+              { id: 'transcript', label: 'Transcript', icon: MessageSquare },
+              { id: 'action-items', label: 'Action Items', icon: CheckSquare },
+            ].map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as 'summary' | 'transcript' | 'action-items')}
+                  className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-neutral-800 text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+                >
+                  <Icon size={16} className={activeTab === tab.id ? 'text-blue-400' : ''} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* Tab content */}
-      {tab === 'summary' && (
-        <div className="animate-fade-in space-y-4">
-          {meeting.summary ? (
-            <div className="card p-6">
-              <h3 className="text-sm font-semibold text-neutral-100 mb-3 flex items-center gap-2">
-                <FileText size={15} className="text-brand-400" /> Executive Summary
-              </h3>
-              <p className="text-sm text-neutral-300 leading-relaxed">{meeting.summary}</p>
-            </div>
-          ) : (
-            <div className="card p-10 text-center">
-              <FileText size={32} className="text-neutral-700 mx-auto mb-3" />
-              <p className="text-sm text-neutral-500">
-                {meeting.status === 'scheduled' ? 'Summary will be generated after the meeting ends.' :
-                 meeting.status === 'active' ? 'Summary will be ready within 10 minutes of meeting end.' :
-                 'No summary available for this meeting.'}
-              </p>
+      {/* Content Area */}
+      <div className="p-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          {activeTab === 'summary' && (
+            <div className="space-y-6 animate-slide-up">
+              <div className="card p-6">
+                <h3 className="text-lg font-bold text-neutral-100 mb-4 flex items-center gap-2">
+                  <Sparkles size={20} className="text-blue-400" />
+                  Executive Summary
+                </h3>
+                <div className="prose prose-invert max-w-none text-neutral-400 leading-relaxed space-y-4">
+                  {meeting.summary ? (
+                    <p className="text-sm">{meeting.summary}</p>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-12 h-12 rounded-full border-4 border-neutral-800 border-t-blue-500 animate-spin mx-auto mb-4" />
+                      <p>VMA is processing the meeting intelligence report...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {meeting.actionItems && meeting.actionItems.length > 0 && (
+                <div className="card p-6">
+                  <h3 className="text-sm font-bold text-neutral-100 uppercase tracking-widest mb-4">Key Takeaways</h3>
+                  <div className="space-y-3">
+                    {meeting.actionItems.map(ai => (
+                      <div key={ai.id} className="flex gap-4 p-4 rounded-xl bg-neutral-900/30 border border-neutral-800/50">
+                        <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${ai.priority === 'high' ? 'bg-rose-500' : ai.priority === 'medium' ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-neutral-200 font-medium mb-1">{ai.description}</p>
+                          <div className="flex items-center gap-3 text-[11px] text-neutral-500">
+                            <span className="font-bold uppercase">{ai.priority} priority</span>
+                            <span className="w-1 h-1 rounded-full bg-neutral-800" />
+                            <span>Assigned to {ai.owner}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          {meeting.actionItems && meeting.actionItems.length > 0 && (
-            <div className="card p-6">
-              <h3 className="text-sm font-semibold text-neutral-100 mb-4 flex items-center gap-2">
-                <CheckSquare size={15} className="text-success-400" /> Action Items ({meeting.actionItems.length})
-              </h3>
-              <div className="space-y-3">
-                {meeting.actionItems.map(ai => (
-                  <div key={ai.id} className="flex items-start gap-4 p-3 rounded-lg bg-neutral-800/40">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-200 mb-1">{ai.description}</p>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                        <span className="flex items-center gap-1"><Users size={11} /> {ai.owner}</span>
-                        <span className="flex items-center gap-1"><Clock size={11} /> Due {ai.deadline}</span>
-                      </div>
+
+          {activeTab === 'transcript' && (
+            <div className="card p-0 overflow-hidden animate-slide-up">
+              <div className="p-4 border-b border-neutral-800 flex items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search transcript phrases..."
+                    className="input pl-10 h-10 text-xs"
+                    value={searchTranscript}
+                    onChange={e => setSearchTranscript(e.target.value)}
+                  />
+                </div>
+                <button className="btn-secondary h-10 text-xs"><PlayCircle size={14} /> Play Sync</button>
+              </div>
+              <div className="max-h-[600px] overflow-y-auto p-6 space-y-8">
+                {meeting.transcript?.map((entry) => (
+                  <div key={entry.id} className="flex gap-4">
+                    <div className="mt-1">
+                      <Avatar name={entry.speaker} size="sm" />
                     </div>
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <Badge variant={priorityBadge[ai.priority]}>{ai.priority}</Badge>
-                      <Badge variant={actionStatusBadge[ai.status]}>{ai.status.replace('_', ' ')}</Badge>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-xs font-bold text-neutral-100">{entry.speaker}</span>
+                        <span className="text-[10px] text-neutral-600 font-mono">{entry.timestamp}</span>
+                      </div>
+                      <p className="text-sm text-neutral-400 leading-relaxed">
+                        {entry.text}
+                      </p>
                     </div>
                   </div>
                 ))}
+                {!meeting.transcript && (
+                  <div className="text-center py-20 text-neutral-500">
+                    <MessageSquare size={40} className="mx-auto mb-4 text-neutral-800" />
+                    <p>No transcript available for this session.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
-        </div>
-      )}
 
-      {tab === 'transcript' && (
-        <div className="card p-6 animate-fade-in">
-          <h3 className="text-sm font-semibold text-neutral-100 mb-4 flex items-center gap-2">
-            <MessageSquare size={15} className="text-brand-400" /> Meeting Transcript
-          </h3>
-          {meeting.transcript && meeting.transcript.length > 0 ? (
-            <div className="space-y-4">
-              {meeting.transcript.map(entry => (
-                <div key={entry.id} className="flex gap-4">
-                  <div className="flex-shrink-0 w-16 text-right">
-                    <span className="text-2xs text-neutral-600 font-mono" style={{ fontSize: '10px' }}>{entry.timestamp}</span>
+          {activeTab === 'action-items' && (
+            <div className="space-y-4 animate-slide-up">
+              {meeting.actionItems?.map(ai => (
+                <div key={ai.id} className="card p-5 flex items-center gap-5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ai.status === 'done' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-neutral-800 text-neutral-500'}`}>
+                    <CheckSquare size={20} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Avatar name={entry.speaker} size="sm" />
-                      <span className="text-xs font-semibold text-neutral-300">{entry.speaker}</span>
-                    </div>
-                    <p className="text-sm text-neutral-400 leading-relaxed pl-9">{entry.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <MessageSquare size={28} className="text-neutral-700 mx-auto mb-3" />
-              <p className="text-sm text-neutral-500">
-                {meeting.status === 'scheduled' ? 'Transcript will be captured during the meeting.' :
-                 meeting.status === 'active' ? 'Transcription in progress...' :
-                 'No transcript available.'}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {tab === 'actions' && (
-        <div className="card p-6 animate-fade-in">
-          <h3 className="text-sm font-semibold text-neutral-100 mb-4 flex items-center gap-2">
-            <CheckSquare size={15} className="text-success-400" /> Action Items
-          </h3>
-          {meeting.actionItems && meeting.actionItems.length > 0 ? (
-            <div className="space-y-3">
-              {meeting.actionItems.map(ai => (
-                <div key={ai.id} className="p-4 rounded-xl bg-neutral-800/40 border border-neutral-800 hover:border-neutral-700 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-neutral-200 mb-2">{ai.description}</p>
-                      <div className="flex flex-wrap gap-3 text-xs text-neutral-500">
-                        <span className="flex items-center gap-1.5">
-                          <Avatar name={ai.owner} size="sm" />
-                          {ai.owner}
-                        </span>
-                        <span className="flex items-center gap-1"><Clock size={11} /> Due {ai.deadline}</span>
+                  <div className="flex-1">
+                    <p className={`text-sm font-bold ${ai.status === 'done' ? 'text-neutral-500 line-through' : 'text-neutral-100'}`}>
+                      {ai.description}
+                    </p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+                      <div className="flex items-center gap-1.5">
+                        <Avatar name={ai.owner} size="xs" />
+                        <span>{ai.owner}</span>
+                      </div>
+                      <span className="w-1 h-1 rounded-full bg-neutral-800" />
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={12} />
+                        <span>Due {new Date(ai.deadline).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <Badge variant={priorityBadge[ai.priority]}>{ai.priority} priority</Badge>
-                      <Badge variant={actionStatusBadge[ai.status]}>{ai.status.replace('_', ' ')}</Badge>
-                    </div>
                   </div>
+                  <Badge variant={ai.status === 'done' ? 'success' : ai.status === 'in_progress' ? 'warning' : 'neutral'}>
+                    {ai.status.replace('_', ' ')}
+                  </Badge>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <CheckSquare size={28} className="text-neutral-700 mx-auto mb-3" />
-              <p className="text-sm text-neutral-500">No action items recorded for this meeting.</p>
-            </div>
           )}
         </div>
-      )}
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          <div className="card p-6">
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Participants ({meeting.participants.length})</h3>
+            <div className="space-y-3">
+              {meeting.participants.map((p, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={p} size="sm" />
+                    <span className="text-sm font-medium text-neutral-200">{p}</span>
+                  </div>
+                  {p === meeting.organizer && <Badge variant="info">Host</Badge>}
+                </div>
+              ))}
+            </div>
+            <button className="btn-secondary w-full text-xs mt-6">Invite More</button>
+          </div>
+
+          <div className="card p-6 border-blue-500/10 bg-blue-500/5">
+            <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Shield size={14} /> Security Compliance
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-neutral-500">Data Residency</span>
+                <span className="text-neutral-200">AU (Sydney)</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-neutral-500">Encryption</span>
+                <span className="text-neutral-200">AES-256 GCM</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-neutral-500">Retention Policy</span>
+                <span className="text-neutral-200">60 Days</span>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-neutral-800/50">
+              <button className="text-[11px] text-blue-400 flex items-center gap-1.5 hover:underline">
+                View Audit Log <ArrowUpRight size={12} />
+              </button>
+            </div>
+          </div>
+
+          <div className="card p-6">
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Integration Details</h3>
+            <div className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neutral-600">Session ID</span>
+                <span className="text-neutral-400 font-mono text-[10px] uppercase">{meeting.id}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-neutral-600">Bot Instance</span>
+                <span className="text-emerald-400">VMA-BOT-042</span>
+              </div>
+            </div>
+            <button className="btn-ghost w-full text-xs mt-4 flex items-center justify-center gap-2">
+              <ExternalLink size={14} /> Join Original Meeting
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
